@@ -1,0 +1,65 @@
+<html>
+
+<head>
+    <title> My first Canvas App</title>
+    <style type="text/css">
+        canvas {
+            background-color: #ccc;
+        }
+
+        ;
+    </style>
+</head>
+
+<body>
+    <canvas width="800px" height="450px" id="canvas"> </canvas>
+    <script type="text/javascript">
+        var c = document.getElementById('canvas');
+        var ctx = c.getContext('2d');
+
+
+        //lingkaran
+
+        ctx.beginPath();
+        ctx.arc(400, 225, 120, 0, 2 * Math.PI);
+        ctx.fillStyle = "#aa000";
+        ctx.fill()
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.arc(400, 225, 80, 0, 2 * Math.PI);
+        ctx.fillStyle = "#dab420";
+        ctx.fill();
+        ctx.stroke();
+
+        //persegi 
+
+        ctx.beginPath();
+        ctx.lineWidth = '5';
+        ctx.strokesStyle = "white";
+        ctx.rect(350, 170, 100, 100);
+        ctx.fillStyle = "#6495ed";
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.moveTo(650, 130);
+        ctx.lineTo(650, 320);
+        ctx.lineTo(750, 230);
+        ctx.closePath();
+        ctx.fillStyle = "#aab001";
+        ctx.fill();
+
+        ctx.beginPath();
+        ctx.moveTo(150, 130);
+        ctx.lineTo(150, 320);
+        ctx.lineTo(50, 230);
+        ctx.closePath();
+        ctx.fillStyle = "#aab001";
+        ctx.fill();
+
+    </script>
+
+</body>
+
+</html>
