@@ -1,0 +1,107 @@
+<html>
+
+<head>
+
+    langkah pertama adalah membuat 3 layer secara bertumpuk dengan ukuran yang sama
+    <meta charset="UTF-8">
+    <title>Canvas Layer Test</title>
+    <style type="text/css">
+        body {
+            position: relative;
+            margin: 0px;
+        }
+
+        #layer1 {
+            z-index: 1;
+            position: absolute;
+            width: 100%;
+        }
+
+        #layer2 {
+            z-index: 2;
+            position: absolute;
+            width: 100%;
+        }
+
+        #layer3 {
+            z-index: 3;
+            position: absolute;
+            width: 100%;
+        }
+    </style>
+</head>
+
+
+fungsi init merupakan proses yang nantinya digunaknan untuk memannggil canvas
+
+<body onresize="init()">
+    <canvas id="layer1" width="811" height="657"></canvas>
+    <canvas id="layer2" width="811" height="657"></canvas>
+    <canvas id="layer3" width="811" height="657"></canvas>
+    <script type="text/javascript">
+        var layer1, layer2, layer3, ctx1, ctx3, ctx3, screenW, screenH;
+        function init() {
+            layer1 = document.getElementById('layer1');
+            layer2 = document.getElementById('layer2');
+            layer3 = document.getElementById('layer3');
+            ctx1 = layer1.getContext('2d');
+            ctx2 = layer2.getContext('2d');
+            ctx3 = layer3.getContext('2d');
+            screenW = window.innerWidth;
+            screenH = window.innerHeight;
+            layer1.width = screenW;
+            layer1.height = screenH;
+            layer2.width = screenW;
+            layer2.height = screenH;
+            layer3.width = screenW;
+            layer3.height = screenH;
+            draw(ctx3, 50, 55, 10, 300);
+            draw(ctx2, 200, 130, 5, 20);
+            draw(ctx1, 200, 50, 0, 120);
+            screenW = window.innerWidth;
+            screenH = window.innerHeight;
+            layer1.width = screenW;
+            layer1.height = screenH;
+            layer2.width = screenW;
+            layer2.height = screenH;
+            layer3.width = screenW;
+            layer3.height = screenH;
+            draw(ctx3, 50, 55, 10, 300);
+            draw(ctx2, 200, 130, 5, 20);
+            draw(ctx1, 200, 50, 0, 120);
+
+        }
+
+        function createCircle(contex, x, y, size) {
+            contex.beginPath();
+            contex.arc(x, y, size, 0, 2 * Math.PI);
+            contex.stroke();
+        }
+
+
+        function draw(contex, radius, circleSize, randomSize, totalObject) {
+            contex.clearRect(0, 0, screenW, screenH);
+            var total_dot = totalObject;
+            var radius = radius;
+            var dots = [];
+            for (var i = 1; i <= total_dot; i++) {
+                sudut = 360 / total_dot * i;
+                posx = Math.cos(sudut * (Math.PI / 180)) * radius / 2;
+                posy = Math.sin(sudut * (Math.PI / 180)) * radius / 2;
+                var newPosx = posx + (screenW / 2);
+                var newPosy = posy + (screenH / 2);
+                var randSize = randomSize;
+                var random1 = Math.floor((Math.random() * randSize));
+                var random2 = Math.floor((Math.random() * randSize));
+                createCircle(contex, newPosx + random1, newPosy + random2,
+                    circleSize);
+            }
+        }
+        init();
+    </script>
+</body>
+<!-- <p>pada tahap 3 setelah membuat layar kemudian kita akan membuat fungsi lingkaran 
+     dan pada fungsi draw kita akan memanggil fungsi lingkaran tersebut secara berulang-ulang.
+ </p> -->
+
+</html>
