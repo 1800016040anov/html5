@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Click mouse and draw line</title>
+    <style type="text/css">
+        canvas {
+            background-color: #ccc;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- <p> noted langkah pengerjaan , pertama seperti biasa membuat element kerja
+     dengan bg color #ccc, berikutnya membuat sebuah event onmousedown 
+     yang artinya apabila mouse ditekan gambar line object e. 
+     berikutnya pada fungsi isCloseTo akan membuat dalam lingkaran object tersebut 
+     bewarna "green" apabila titik awal bertemu dengan titik akhirnya 
+ </p> -->
+    <canvas height="450" width="800" id="canvas"></canvas>
+    <script type="text/javascript">
+        var c = document.getElementById('canvas');
+        var ctx = c.getContext('2d');
+        var lines = [];
+        document.body.addEventListener('mousedown', drawline);
+        function drawline(e) {
+            var x = e.offsetX;
+            var y = e.offsetY;
+            if (lines.length == 0) {
+                ctx.moveTo(x, y);
+            }
+            ctx.lineTo(x, y);
+            ctx.lineWidth = 2;
+            ctx.strokeStyle = 'black';
+            ctx.stroke();
+            lines.push([x, y]);
+            var sprite = {
+                x: lines[0][0],
+                y: lines[0][1]
+            };
+            var target = {
+                x: lines[lines.length - 1][0],
+                y: lines[lines.length - 1][1]
+            };
+            isCloseTo(sprite, target);
+        }
+
+
+        function isCloseTo(sprite, target) {
+
+            var dist = Math.sqrt(((sprite.x - target.x) * (sprite.x -
+                target.x)) + ((sprite.y - target.y) * (sprite.y - target.y)));
+
+            console.log(dist);
+            if (lines.length > 1 && dist < 6) {
+                console.log('make polygon');
+                ctx.lineTo(target.x, target.y);
+                ctx.fillStyle = 'green';
+
+                ctx.fill();
+                lines = [];
+
+            }
+        }
+    </script>
+</body>
+
+</html>
