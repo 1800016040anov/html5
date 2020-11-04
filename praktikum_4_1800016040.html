@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Drag Drop OOP</title>
+
+    <head>
+        <style type="text/css">
+            body {
+                margin: 0;
+            }
+
+            canvas {
+                position: absolute;
+                background-color: #cccc;
+            }
+        </style>
+
+    <body>
+        <script>
+            var sprites = [], targets = [];
+            function startGame() {
+                myApp.start();
+                for (var i = 1; i < 4; i++) {
+                    sprites[i] = new sprite('assets/obj_' + i + '.png', 100, i * 100);
+                    targets[i] = new sprite('assets/target_' + i + '.png', 500, i * 100);
+                    dragable(sprites[i], targets[i]);
+                }
+            }
+            var myApp = {
+                canvas: document.createElement("canvas"),
+                start: function () {
+                    this.canvas.width = 800;
+                    this.canvas.height = 450;
+                    this.context = this.canvas.getContext("2d");
+                    document.body.insertBefore(this.canvas,
+                        document.body.childNodes[0]);
+                    this.interval = setInterval(appLoop, 20);
+                },
+                clear: function () {
+                    this.context.clearRect(0, 0, this.canvas.width,
+                        this.canvas.height);
+                }
+            }
+            function sprite(url, x, y) {
+                this.x = x;
+                this.y = y;
+                this.width = 100;
+                this.height = 100;
+                var ctx = myApp.context;
+                var imgObject = new Image();
+                imgObject.src = url;
+                ctx.drawImage(imgObject, this.x, this.y);
+                this.update = function () {
+                    ctx.drawImage(imgObject, this.x, this.y);
+                }
+            }
+            function appLoop() {
+                myApp.clear();
+                for (var i = 1; i < 4; i++) {
+                    targets[i].update();
+                    sprites[i].update();
+                }
+                for (var i = 1; i < 4; i++) {
+                    targets[i].update();
+                    sprites[i].update();
+                }
+            }
+            function dragable(sprite, target) {
+                var offsetX, offsetY;
+                document.body.addEventListener('mousedown', function (e) {
+                    offsetX = e.clientX - sprite.x;
+                    offsetY = e.clientY - sprite.y;
+                    //mendeteksi pointer klik diatas objek lewat fungsi mouseIsOver
+                    if (mouseIsOver(e.clientX, e.clientY, sprite)) {
+                        //jika klik diatas objek, deteksi pergerakan mouse dan kondisi saat mouse lepas
+                        //panggil fungsi mouseMove saat pointer bergerak
+                        document.body.addEventListener('mousemove', mouseMove);
+                        //panggil fungsi mouseUp saat pointer lepas
+                        document.body.addEventListener('mouseup', mouseUp);
+                    }
+                });
+                function mouseMove(e) {
+                    //gambar objek baru lewat fungsi draw() dengan posisi x dan y sama dengan posisi x dan y pointer
+                    //menambahkan faktor offset agar posisi drag objek tidak bergeser
+                    sprite.x = e.clientX - offsetX, sprite.y = e.clientY - offsetY;
+                };
+                function mouseUp(e) {
+                    //hapus event untuk mousemove dan mouseup agar kondisi kembali seperti semula
+                    document.body.removeEventListener('mousemove', mouseMove);
+                    document.body.removeEventListener('mouseup', mouseUp);
+                    calculateDistance();
+                }
+                //fungsi untuk mendeteksi posisi pointer diatas objek
+                function mouseIsOver(mouseX, mouseY, obj) {
+                    if (mouseX > obj.x && mouseX < obj.x + obj.width && mouseY > obj.y &&
+                        mouseY < obj.y + obj.height)
+                        return true;
+                    else return false;
+                }
+                //menghitung jarak antara sprite dengan target
+                function calculateDistance() {
+
+                    var dist = Math.sqrt(((sprite.x - target.x) * (sprite.x -
+                        target.x)) + ((sprite.y - target.y) * (sprite.y - target.y)));
+
+                    if (dist < 30) {
+                        sprite.x = target.x;
+                        sprite.y = target.y;
+                    }
+                }
+            };
+            startGame();
+        </script>
+    </body>
+</head>
