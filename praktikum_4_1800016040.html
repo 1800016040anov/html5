@@ -22,8 +22,8 @@
             function startGame() {
                 myApp.start();
                 for (var i = 1; i < 4; i++) {
-                    sprites[i] = new sprite('assets/obj_' + i + '.png', 100, i * 100);
-                    targets[i] = new sprite('assets/target_' + i + '.png', 500, i * 100);
+                    sprites[i] = new sprite('Assets/obj_' + i + '.png', 100, i * 100);
+                    targets[i] = new sprite('Assets/target_' + i + '.png', 500, i * 100);
                     dragable(sprites[i], targets[i]);
                 }
             }
@@ -71,34 +71,34 @@
                 document.body.addEventListener('mousedown', function (e) {
                     offsetX = e.clientX - sprite.x;
                     offsetY = e.clientY - sprite.y;
-                    //mendeteksi pointer klik diatas objek lewat fungsi mouseIsOver
+                    //apabila mouse is over maka akan menjalankan fungsi add event mouse move dan mouse up
                     if (mouseIsOver(e.clientX, e.clientY, sprite)) {
-                        //jika klik diatas objek, deteksi pergerakan mouse dan kondisi saat mouse lepas
-                        //panggil fungsi mouseMove saat pointer bergerak
+                        //fungsi ketika kita ingin menggeser object
+                        //memanggil event move
                         document.body.addEventListener('mousemove', mouseMove);
-                        //panggil fungsi mouseUp saat pointer lepas
+                        //memanggil event move saat  mouse di lepas
                         document.body.addEventListener('mouseup', mouseUp);
                     }
                 });
                 function mouseMove(e) {
-                    //gambar objek baru lewat fungsi draw() dengan posisi x dan y sama dengan posisi x dan y pointer
-                    //menambahkan faktor offset agar posisi drag objek tidak bergeser
+                    //gambar object baru menyamakan posisi x dan y saat pointer dilepas
+                    //Offset digunakan agar posisi drag tidak bergeser
                     sprite.x = e.clientX - offsetX, sprite.y = e.clientY - offsetY;
                 };
                 function mouseUp(e) {
-                    //hapus event untuk mousemove dan mouseup agar kondisi kembali seperti semula
+                    //fungsi untuk mengembalikan event seperti semuala
                     document.body.removeEventListener('mousemove', mouseMove);
                     document.body.removeEventListener('mouseup', mouseUp);
                     calculateDistance();
                 }
-                //fungsi untuk mendeteksi posisi pointer diatas objek
+                //fungsi untuk mouse is Over , yaitu ketika pointer berada diatas ibject
                 function mouseIsOver(mouseX, mouseY, obj) {
                     if (mouseX > obj.x && mouseX < obj.x + obj.width && mouseY > obj.y &&
                         mouseY < obj.y + obj.height)
                         return true;
                     else return false;
                 }
-                //menghitung jarak antara sprite dengan target
+                //membuat funngsi untuk menghitung jarak 
                 function calculateDistance() {
 
                     var dist = Math.sqrt(((sprite.x - target.x) * (sprite.x -
