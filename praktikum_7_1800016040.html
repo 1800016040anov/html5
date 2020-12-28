@@ -1,0 +1,125 @@
+<!doctype html>
+<html>
+
+<head>
+    <title>WebRTC: Still photo capture demo</title>
+    <meta charset='utf-8'>
+    <link rel="stylesheet" href="main.css" type="text/css" media="all">
+    <style type="text/css">
+        #canvas {
+            background-color: #ccc;
+        }
+
+        .camera,
+        .canvas-container,
+        .image-container {
+            float: left;
+        }
+    </style>
+</head>
+
+<body onload="startup()">
+    <div class="camera">
+        <h3>Video Steraming</h3>
+        <video id="video">Video stream not available.</video>
+        <div>
+            <button id="startbutton">Take photo</button>
+        </div>
+    </div>
+    <div class="canvas-container">
+
+        Modul Praktikum Multimedia Online V1.0
+
+        73
+
+        <h3>Canvas Image</h3>
+        <canvas id="canvas"></canvas>
+    </div>
+    <div class="image-container">
+        <h3>Regular HTML Image</h3>
+        <div class="output">
+            <img id="photo" alt="The screen capture will appear in this box.">
+        </div>
+    </div>
+    <script type="text/javascript">
+        var width = 400;
+        var height = 0;
+
+        var streaming = false;
+
+        var video = null;
+        var canvas = null;
+        var photo = null;
+        var startbutton = null;
+        function startup() {
+            video = document.getElementById('video');
+            canvas = document.getElementById('canvas');
+            photo = document.getElementById('photo');
+            startbutton = document.getElementById('startbutton');
+            navigator.mediaDevices.getUserMedia({ video: true, audio: false })
+                .then(function (stream) {
+                    video.srcObject = stream;
+                    video.play();
+                })
+                .catch(function (err) {
+                    console.log("An error occurred: " + err);
+                });
+            video.addEventListener('canplay', function (ev) {
+                if (!streaming) {
+                    height = video.videoHeight / (video.videoWidth / width);
+
+                    Modul Praktikum Multimedia Online V1.0
+
+                    74
+
+                    if (isNaN(height)) {
+                        height = width / (4 / 3);
+                    }
+                    video.setAttribute('width', width);
+                    video.setAttribute('height', height);
+                    canvas.setAttribute('width', width);
+                    canvas.setAttribute('height', height);
+                    streaming = true;
+                }
+            }, false);
+            startbutton.addEventListener('click', function (ev) {
+                takepicture();
+                ev.preventDefault();
+            }, false);
+            clearphoto();
+        }
+        function clearphoto() {
+            var context = canvas.getContext('2d');
+            context.fillStyle = "#AAA";
+            context.fillRect(0, 0, canvas.width, canvas.height);
+            var data = canvas.toDataURL('image/png');
+            photo.setAttribute('src', data);
+        }
+        function takepicture() {
+            var context = canvas.getContext('2d');
+            if (width && height) {
+                canvas.width = width;
+                canvas.height = height;
+                var cropStartX = 0,
+                    cropStartY = 0,
+                    cropWidth = 400,
+                    cropHeight = 400,
+                    imageX = 100,
+                    imageY = 100,
+                    imageWidth = 100,
+                    imageHeight = 100;
+                context.drawImage(video, cropStartX,
+                    cropStartY, cropWidth, cropHeight, imageX, imageY, imageWidth, imageHeight);
+                var data = canvas.toDataURL('image/png');
+
+
+
+                photo.setAttribute('src', data);
+            } else {
+                clearphoto();
+            }
+        }
+    </script>
+</body>
+
+</html>
