@@ -1,0 +1,135 @@
+<!doctype html>
+<html>
+
+<head>
+    <title>Praktikum 9 edit machine</title>
+    <meta charset='utf-8'>
+    </script>
+</head>
+<style type="text/css">
+    canvas {
+        background-color: #ccc;
+    }
+</style>
+
+<body>
+    <script>
+        var img;
+        var rect;
+        var croppedImage;
+        var btn;
+        var avatar;
+        var cropping = false;
+        function startApp() {
+
+
+            btn = document.getElementById('btn');
+            avatar = new Image();
+            avatar.src = 'Assets/minion.jpg';
+            myApp.start();
+            img = new image(0, 0);
+            rect = new rectComponent(0, 0, 1, 1);
+            drawRect();
+        }
+        var myApp = {
+            canvas: document.createElement("canvas"),
+            start: function () {
+                this.canvas.width = 800;
+                this.canvas.height = 450;
+                this.context = this.canvas.getContext("2d");
+                document.body.insertBefore(this.canvas,
+                    document.body.childNodes[0]);
+                this.interval = setInterval(apploop, 20);
+                //window.requestAnimationFrame(gameLoop);
+                //document.body.addEventListener('mousedown',addImage);
+            },
+            clear: function () {
+                this.context.clearRect(0, 0, this.canvas.width,
+                    this.canvas.height);
+            }
+        }
+        function image(x, y) {
+            this.x = x;
+            this.y = y;
+            this.width = 400;
+            this.height = 400;
+            var ctx = myApp.context;
+            this.startCropX = x;
+            this.startCropY = y;
+            this.cropWidth = 200;
+            this.cropHeight = 200;
+            this.cropping = false;
+            this.update = function () {
+                if (!this.cropping)
+
+
+
+                    ctx.drawImage(avatar, this.x, this.y);
+                else
+                    //ctx.drawImage(avatar,this.startCropX,this.startCropY,this.croptWidth, this.cropHeight, this.x, this.y, this.width, this.height;
+                    ctx.drawImage(avatar, this.startCropX, this.startCropY, this.cropWidth, this.cropHeight, this.x, this.y, this.width, this.height);
+            }
+        }
+        function apploop() {
+            myApp.clear();
+            img.update();
+            rect.update();
+        }
+        function rectComponent(x, y, w, h) {
+            this.x = x;
+            this.y = y;
+            this.width = w;
+            this.height = h;
+            var contex = myApp.context;
+            this.update = function () {
+                contex.beginPath();
+                contex.fillStyle = "rgba(0, 0, 0, 0.5)";
+                contex.fillRect(this.x, this.y, this.width, this.height);
+            }
+        }
+        function editingMode(mode) {
+            if (img.cropping) img.cropping = false; else img.cropping = true;
+        }
+        function cropImage() {
+
+            img.x = rect.x;
+            img.y = rect.y;
+            img.width = rect.width;
+            img.height = rect.height;
+            img.startCropX = rect.x;
+            img.startCropY = rect.y;
+            img.cropWidth = rect.width;
+            img.cropHeight = rect.height;
+            console.log(img);
+        }
+        function drawRect() {
+            var x, y, rw, rh;
+            document.body.addEventListener('mousedown', function (e) {
+                x = e.offsetX;
+                y = e.offsetY;
+                rect = new rectComponent(x, y, 1, 1);
+                document.body.addEventListener('mousemove', mouseMove);
+                document.body.addEventListener('mouseup', mouseUp);
+            });
+            function mouseMove(e) {
+                rw = e.offsetX - rect.x;
+                rh = e.offsetY - rect.y;
+                rect.width = rw;
+                rect.height = rh;
+            }
+            function mouseUp(e) {
+                document.body.removeEventListener('mousemove', mouseMove);
+                document.body.removeEventListener('mouseup', mouseUp);
+                img.cropping = true;
+                cropImage();
+            }
+        }
+        function addImage() {
+            img.update();
+        }
+        startApp();
+
+    </script>
+</body>
+
+</html>
