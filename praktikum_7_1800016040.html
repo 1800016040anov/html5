@@ -138,7 +138,7 @@
                     document.getElementById('msg').textContent = "Audio sample download finished";
                     audioData = buffer;
                     playSound(audioData);
-                }, onError);
+                });
             }
             request.send();
         }
