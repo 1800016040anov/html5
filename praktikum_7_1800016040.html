@@ -1,124 +1,174 @@
-<!doctype html>
+<!DOCTYPE html>
 <html>
 
 <head>
-    <title>WebRTC: Still photo capture demo</title>
-    <meta charset='utf-8'>
-    <link rel="stylesheet" href="main.css" type="text/css" media="all">
-    <style type="text/css">
-        #canvas {
-            background-color: #ccc;
-        }
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width">
+    <title>example</title>
+    <link rel="stylesheet" href="">
 
-        .camera,
-        .canvas-container,
-        .image-container {
-            float: left;
-        }
-    </style>
 </head>
 
-<body onload="startup()">
-    <div class="camera">
-        <h3>Video Steraming</h3>
-        <video id="video">Video stream not available.</video>
-        <div>
-            <button id="startbutton">Take photo</button>
-        </div>
-    </div>
-    <div class="canvas-container">
+<body onload="startApp()">
+    <canvas id="canvas"></canvas>
+    <p id="controls">
+        <input type="button" id="start_button" value="Start">
+        &nbsp; &nbsp;
+        <input type="button" id="stop_button" value="Stop">
+    <p id="msg"></p>
+    </p>
 
-        Modul Praktikum Multimedia Online V1.0
+    <!-- ----------------------------------------------------- -->
+    <style>
+        #canvas {
+            margin-left: auto;
+            margin-right: auto;
+            display: block;
+            background-color: black;
+        }
 
-        73
+        #controls {
+            text-align: center;
+        }
 
-        <h3>Canvas Image</h3>
-        <canvas id="canvas"></canvas>
-    </div>
-    <div class="image-container">
-        <h3>Regular HTML Image</h3>
-        <div class="output">
-            <img id="photo" alt="The screen capture will appear in this box.">
-        </div>
-    </div>
+        #start_button,
+        #stop_button {
+            font-size: 16pt;
+        }
+
+        #msg {
+            text-align: center;
+        }
+    </style>
+    <!-- ----------------------------------------------------- -->
     <script type="text/javascript">
-        var width = 400;
-        var height = 0;
+        // Hacks to deal with different function names in different  browsers
+        window.requestAnimFrame = (function () {
+            return window.requestAnimationFrame ||
+                window.webkitRequestAnimationFrame ||
+                window.mozRequestAnimationFrame ||
 
-        var streaming = false;
+                function (callback, element) {
+                    window.setTimeout(callback, 1000 / 60);
+                };
+        })();
+        window.AudioContext = (function () {
+            return window.webkitAudioContext || window.AudioContext ||
+                window.mozAudioContext;
+        })();
+        // Global Variables for Audio
+        var audioContext;
+        var audioBuffer;
+        var sourceNode;
+        var analyserNode;
+        var javascriptNode;
+        var audioData = null;
+        var audioPlaying = false;
+        var sampleSize = 1024; //sampel angka yang di ambil sebelumdata di analisis
+        var amplitudeArray; // array untuk menyimpan data domainnya
+        var audioUrl = "opick.mp3";//sampel audio yang akan di ambil untuk di jadikan atau di convert menjadi grafik visual
+        var canvasWidth = 1000; //mendefinisikan lebar kanvas
+        var canvasHeight = 450; //mendefininsikan tinggi kanvas
+        var ctx;
+        function startApp() {
+            var c = document.getElementById('canvas');
+            c.width = canvasWidth;
+            c.height = canvasHeight;
+            ctx = c.getContext("2d");
+            try {
+                audioContext = new AudioContext();
+            } catch (e) {
+                alert('Web Audio API is not supported in this browser');
+            }
+            // Ketika tombol start di klik, selesai mengatur node
+            //audio, dan memainkan audio
+            // mengumpulkan sampel data untuk di analisa lalu memperbaruhi kanvas
+            var startBtn = document.getElementById('start_button');
+            startBtn.onclick = function (e) {
+                javascriptNode
+                setupAudioNodes();
+                javascriptNode.onaudioprocess = function () {
+                    // get the Time Domain data for this sample
+                    analyserNode.getByteTimeDomainData(amplitudeArray);
+                    // draw the display if the audio is playing
+                    if (audioPlaying == true) {
 
-        var video = null;
-        var canvas = null;
-        var photo = null;
-        var startbutton = null;
-        function startup() {
-            video = document.getElementById('video');
-            canvas = document.getElementById('canvas');
-            photo = document.getElementById('photo');
-            startbutton = document.getElementById('startbutton');
-            navigator.mediaDevices.getUserMedia({ video: true, audio: false })
-                .then(function (stream) {
-                    video.srcObject = stream;
-                    video.play();
-                })
-                .catch(function (err) {
-                    console.log("An error occurred: " + err);
-                });
-            video.addEventListener('canplay', function (ev) {
-                if (!streaming) {
-                    height = video.videoHeight / (video.videoWidth / width);
-
-                    Modul Praktikum Multimedia Online V1.0
-
-                    74
-
-                    if (isNaN(height)) {
-                        height = width / (4 / 3);
+                        requestAnimFrame(drawTimeDomain);
                     }
-                    video.setAttribute('width', width);
-                    video.setAttribute('height', height);
-                    canvas.setAttribute('width', width);
-                    canvas.setAttribute('height', height);
-                    streaming = true;
                 }
-            }, false);
-            startbutton.addEventListener('click', function (ev) {
-                takepicture();
-                ev.preventDefault();
-            }, false);
-            clearphoto();
+                // Load the Audio the first time through, otherwise play it from the buffer
+                if (audioData == null) {
+                    loadSound(audioUrl);
+                } else {
+                    playSound(audioData);
+                }
+            };
+            // Stop the audio playing
+            var stopBtn = document.getElementById('stop_button');
+            stopBtn.onclick = function (e) {
+                e.preventDefault();
+                sourceNode.stop(0);
+                audioPlaying = false;
+            };
+        };
+        function setupAudioNodes() {
+            sourceNode = audioContext.createBufferSource();
+            analyserNode = audioContext.createAnalyser();
+            javascriptNode =
+                audioContext.createScriptProcessor(sampleSize, 1, 1);
+            // Create the array for the data values
+            amplitudeArray = new
+                Uint8Array(analyserNode.frequencyBinCount);
+            // Now connect the nodes together
+            sourceNode.connect(audioContext.destination);
+            sourceNode.connect(analyserNode);
+            analyserNode.connect(javascriptNode);
+            javascriptNode.connect(audioContext.destination);
         }
-        function clearphoto() {
-            var context = canvas.getContext('2d');
-            context.fillStyle = "#AAA";
-            context.fillRect(0, 0, canvas.width, canvas.height);
-            var data = canvas.toDataURL('image/png');
-            photo.setAttribute('src', data);
+        function loadSound(url) {
+            document.getElementById('msg').textContent = "Loading audio...";
+            var request = new XMLHttpRequest();
+            request.open('GET', url, true);
+            request.responseType = 'arraybuffer';
+            // When loaded, decode the data and play the sound
+            request.onload = function () {
+                audioContext.decodeAudioData(request.response, function
+                    (buffer) {
+                    document.getElementById('msg').textContent = "Audio sample download finished";
+                    audioData = buffer;
+                    playSound(audioData);
+                }, onError);
+            }
+            request.send();
         }
-        function takepicture() {
-            var context = canvas.getContext('2d');
-            if (width && height) {
-                canvas.width = width;
-                canvas.height = height;
-                var cropStartX = 0,
-                    cropStartY = 0,
-                    cropWidth = 400,
-                    cropHeight = 400,
-                    imageX = 100,
-                    imageY = 100,
-                    imageWidth = 100,
-                    imageHeight = 100;
-                context.drawImage(video, cropStartX,
-                    cropStartY, cropWidth, cropHeight, imageX, imageY, imageWidth, imageHeight);
-                var data = canvas.toDataURL('image/png');
+        function playSound(buffer) {
+            sourceNode.buffer = buffer;
+            sourceNode.start(0); // Play the sound now
+            sourceNode.loop = true;
+            audioPlaying = true;
+            function onError(e) {
+                console.log(e);
+            }
+            function onError(e) {
+                console.log(e);
+            }
 
-
-
-                photo.setAttribute('src', data);
-            } else {
-                clearphoto();
+            clearCanvas();
+            for (var i = 0; i < amplitudeArray.length; i++) {
+                var value = amplitudeArray[i] / 300;
+                var y = canvasHeight - (canvasHeight * value) - 1;
+                var x = i * canvasWidth / amplitudeArray.length;
+                var clr = ['red', 'blue', 'yellow'];
+                var color = Math.floor(Math.random() * 10);
+                ctx.fillStyle = 'blue';
+                ctx.fillRect(x, 0, 2, y);
             }
         }
+        function clearCanvas() {
+            ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+        }
+
     </script>
 </body>
 
