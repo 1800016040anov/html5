@@ -1,123 +1,167 @@
-<!doctype html>
-<html>
+<html lang="en">
 
 <head>
-    <title>WebRTC: Still photo capture demo</title>
-    <meta charset='utf-8'>
-    <link rel="stylesheet" href="main.css" type="text/css" media="all">
-    <style type="text/css">
-        #canvas {
-            background-color: #ccc;
-        }
-
-        .camera,
-        .canvas-container,
-        .image-container {
-            float: left;
-        }
-    </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Audio Visualizer</title>
 </head>
 
-<body onload="startup()">
-    <div class="camera">
-        <h3>Video Steraming</h3>
-        <video id="video">Video stream not available.</video>
-        <div>
-            <button id="startbutton">Take photo</button>
-        </div>
-    </div>
-    <div class="canvas-container">
+<body onload="startApp()">
+    <canvas id="canvas"></canvas>
 
-        Modul Praktikum Multimedia Online V1.0
+    <p id="controls">
+        <input type="button" id="start_button" value="Start">
+        &nbsp; &nbsp;
+        <input type="button" id="stop_button" value="Stop">
+    <p id="msg"></p>
+    </p>
 
-        73
+    <style>
+        #canvas {
+            margin-left: auto;
+            margin-right: auto;
+            display: block;
+            background-color: black;
+        }
 
-        <h3>Canvas Image</h3>
-        <canvas id="canvas"></canvas>
-    </div>
-    <div class="image-container">
-        <h3>Regular HTML Image</h3>
-        <div class="output">
-            <img id="photo" alt="The screen capture will appear in this box.">
-        </div>
-    </div>
+        #controls {
+            text-align: center;
+        }
+
+        #start_button,
+        #stop_button {
+            font-size: 16pt;
+        }
+
+        #msg {
+            text-align: center;
+        }
+    </style>
+
+    <!-- Mendefinisikan variabel u audio visualizer -->
     <script type="text/javascript">
-        var width = 400;
-        var height = 0;
 
-        var streaming = false;
+        window.requestAnimFrame = (function () {
+            return window.requestAnimationFrame ||
+                window.webkitCancelAnimationFrame ||
+                window.mozRequestAnimationFrame ||
+                function (callback, element) {
+                    window.setTimeout(callback, 1000 / 60);
+                };
+        })();
 
-        var video = null;
-        var canvas = null;
-        var photo = null;
-        var startbutton = null;
-        function startup() {
-            video = document.getElementById('video');
-            canvas = document.getElementById('canvas');
-            photo = document.getElementById('photo');
-            startbutton = document.getElementById('startbutton');
-            navigator.mediaDevices.getUserMedia({ video: true, audio: false })
-                .then(function (stream) {
-                    video.srcObject = stream;
-                    video.play();
-                })
-                .catch(function (err) {
-                    console.log("An error occurred: " + err);
-                });
-            video.addEventListener('canplay', function (ev) {
-                if (!streaming) {
-                    height = video.videoHeight / (video.videoWidth / width);
+        window.AudioContext = (function () {
+            return window.webkitAudioContext || window.AudioContext || window.mozAudioContext;
+        })();
 
-                    Modul Praktikum Multimedia Online V1.0
+        // Variabel global u audio
+        var audioContext;
+        var audioBuffer;
+        var sourceNode;
+        var analyserNode;
+        var javascriptNode;
+        var audioData = null;
+        var audioPlaying = false;
+        var sampleSize = 1024;  // sample angka yg diambil sebelum data di analisis
+        var amplitudeArray;     // array u menyimpan data domain
+        var audioUrl = "opick.mp3";        // sample audio yang akan divisualkan
+        // Menentukan luas canvas
+        var canvasWidth = 1000;
+        var canvasHeight = 450;
+        var ctx;
 
-                    74
+        function startApp() {
+            var c = document.getElementById('canvas');
+            c.width = canvasWidth;
+            c.height = canvasHeight;
+            ctx = c.getContext("2d");
 
-                    if (isNaN(height)) {
-                        height = width / (4 / 3);
-                    }
-                    video.setAttribute('width', width);
-                    video.setAttribute('height', height);
-                    canvas.setAttribute('width', width);
-                    canvas.setAttribute('height', height);
-                    streaming = true;
-                }
-            }, false);
-            startbutton.addEventListener('click', function (ev) {
-                takepicture();
-                ev.preventDefault();
-            }, false);
-            clearphoto();
-        }
-        function clearphoto() {
-            var context = canvas.getContext('2d');
-            context.fillStyle = "#AAA";
-            context.fillRect(0, 0, canvas.width, canvas.height);
-            var data = canvas.toDataURL('image/png');
-            photo.setAttribute('src', data);
-        }
-        function takepicture() {
-            var context = canvas.getContext('2d');
-            if (width && height) {
-                canvas.width = width;
-                canvas.height = height;
-                var cropStartX = 0,
-                    cropStartY = 0,
-                    cropWidth = 400,
-                    cropHeight = 400,
-                    imageX = 100,
-                    imageY = 100,
-                    imageWidth = 100,
-                    imageHeight = 100;
-                context.drawImage(video, cropStartX,
-                    cropStartY, cropWidth, cropHeight, imageX, imageY, imageWidth, imageHeight);
-                var data = canvas.toDataURL('image/png');
-
-
-
-                photo.setAttribute('src', data);
-            } else {
-                clearphoto();
+            try {
+                audioContext = new AudioContext();
+            } catch (e) {
+                alert('Web Audio API is not supported in this browser');
             }
+
+            //
+            var startBtn = document.getElementById('start_button');
+            startBtn.onclick = function (e) {
+                e.preventDefault();
+                setupAudioNodes();
+
+                javascriptNode.onaudioprocess = function () {
+                    analyserNode.getByteTimeDomainData(amplitudeArray);
+                    if (audioPlaying == true) {
+                        requestAnimFrame(drawTimeDomain);
+                    }
+                }
+                if (audioData == null) {
+                    loadSound(audioUrl);
+                } else {
+                    playSound(audioData);
+                }
+            };
+
+            //
+            var stopBtn = document.getElementById('stop_button');
+            stopBtn.onclick = function (e) {
+                e.preventDefault();
+                sourceNode.stop(0);
+                audioPlaying = false;
+            };
+        };
+
+        function setupAudioNodes() {
+            sourceNode = audioContext.createBufferSource();
+            analyserNode = audioContext.createAnalyser();
+            javascriptNode = audioContext.createScriptProcessor(sampleSize, 1, 1);
+            amplitudeArray = new Uint8Array(analyserNode.frequencyBinCount);
+            sourceNode.connect(audioContext.destination);
+            sourceNode.connect(analyserNode);
+            analyserNode.connect(javascriptNode);
+            javascriptNode.connect(audioContext.destination);
+        }
+
+        function loadSound(url) {
+            document.getElementById('msg').textContent = "Loading audio...";
+            var request = new XMLHttpRequest();
+            request.open('GET', url, true);
+            request.responseType = 'arraybuffer';
+            request.onload = function () {
+                audioContext.decodeAudioData(request.response, function (buffer) {
+                    document.getElementById('msg').textContent = "Audio sample download finished";
+                    audioData = buffer;
+                    playSound(audioData);
+                }, onError);
+            }
+            request.send();
+        }
+
+        function playSound(buffer) {
+            sourceNode.buffer = buffer;
+            sourceNode.start(0);
+            sourceNode.loop = true;
+            audioPlaying = true;
+        }
+
+        function onError(e) {
+            console.log(e);
+        }
+
+        function drawTimeDomain() {
+            clearCanvas();
+            for (var i = 0; i < amplitudeArray.length; i++) {
+                var value = amplitudeArray[i] / 300;
+                var y = canvasHeight - (canvasHeight * value) - 1;
+                var x = i * canvasWidth / amplitudeArray.length;
+                var clr = ['red', 'blue', 'yellow'];
+                var color = Math.floor(Math.random() * 10);
+                ctx.fillStyle = 'blue';
+                ctx.fillRect(x, 0, 2, y);
+            }
+        }
+
+        function clearCanvas() {
+            ctx.clearRect(0, 0, canvasWidth, canvasHeight);
         }
     </script>
 </body>
